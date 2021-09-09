@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream> //only to debug
 
 #include "linux_parser.h"
 
@@ -67,8 +68,30 @@ vector<int> LinuxParser::Pids() {
   return pids;
 }
 
-// TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+// To review. Is there another way of memory calculation better?
+float LinuxParser::MemoryUtilization() { 
+  // MemTotal - MemFree
+  string line;
+  string key;
+  string value;
+  float mem_total{0};
+  float mem_free{0};
+  std::ifstream filestream(kProcDirectory + kMeminfoFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+      while (linestream >> key >> value) {
+        if (key == "MemTotal:") {
+          mem_total = std::stoi(value);
+        }
+        if (key == "MemFree:") {
+          mem_free = std::stoi(value);
+        }
+      }      
+    }
+  }
+  return (mem_total - mem_free)/mem_total;
+ }
 
 // TODO: Read and return the system uptime
 long LinuxParser::UpTime() { return 0; }
