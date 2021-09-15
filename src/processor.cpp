@@ -1,4 +1,18 @@
 #include "processor.h"
+#include "linux_parser.h" //Included by me
+#include <iostream>
 
-// TODO: Return the aggregate CPU utilization
-float Processor::Utilization() { return 0.0; }
+// CPU Utilization is the diferential of active jiffes divided by diferential of total jiffies.
+float Processor::Utilization() { 
+    long active_j = LinuxParser::ActiveJiffies();
+
+    long active_d = active_j - active_j_prev_;
+    long total_d = LinuxParser::Jiffies() - active_j_prev_ - idle_j_prev_;
+
+    // Update Previous Data
+    active_j_prev_ = active_j;
+    idle_j_prev_ = LinuxParser::IdleJiffies();                                       
+     
+    return (float)active_d/total_d; 
+}
+
