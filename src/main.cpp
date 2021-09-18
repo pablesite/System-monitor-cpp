@@ -1,5 +1,7 @@
 #include "ncurses_display.h"
+#include <vector>
 #include "system.h"
+#include "process.h"
 
 //Only for debug
 #include <chrono>
@@ -8,22 +10,16 @@
 #include <iostream>
 
 int main() {
+  std::vector<Process > processes = {};
+  // Process myprocess{1};
+  // processes.emplace_back(myprocess);
+  //System system(processes);
   System system;
-  NCursesDisplay::Display(system);
-  
-  // std::vector<Process> processes;
-  // while(1){
-  //   processes = system.Processes();
-  //   std::cout << "\n\nProcesses: Nº " << processes.size() << ": ";
+  NCursesDisplay::Display(system, 10);
+  // std::vector<Process* > &proceses_return =  system.Processes();
+  // std::cout << "Size of processes_return: " << proceses_return.size() << "\n";
+  // std::cout << "Pid of last process: " << proceses_return.back()->Pid() << "\n";
 
-  //   for (int i = 0; i < 10; ++i) {
-  //     float cpu = processes[i].CpuUtilization() * 100; 
-  //     //std::cout << "(" << cpu << ") ";
-  //   }
-  //   system.SortProcesses();
 
-  //   std::cout << "Final" << "\n";
 
-  //   std::this_thread::sleep_for(std::chrono::seconds(1));
-  // }
 }

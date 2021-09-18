@@ -99,7 +99,8 @@ float LinuxParser::MemoryUtilization() {
 The second value is the sum of how much time each core has spent idle, in seconds. 
 Consequently, the second value may be greater than the overall system uptime on systems with multiple cores.*/
 long LinuxParser::UpTime() { 
-  string system_uptime, idle_uptime;
+  string system_uptime = "0";
+  string idle_uptime = "0";
   string line;
   std::ifstream stream(kProcDirectory + kUptimeFilename);
   if (stream.is_open()) {
@@ -116,7 +117,7 @@ long LinuxParser::Jiffies() { return ActiveJiffies() + IdleJiffies(); }
 
 long LinuxParser::ActiveJiffies(int pid) { 
   // ActiveJiffies = utime_ + stime_ + cstime_ + cutime_.
-  std::vector<std::string> process_u = LinuxParser::CpuUtilization(pid);                                    
+  std::vector<std::string> process_u = LinuxParser::CpuUtilization(pid);                                
   return  std::stol(process_u[ProcessStates::utime_]) + 
           std::stol(process_u[ProcessStates::stime_]) +
           std::stol(process_u[ProcessStates::cstime_]) + 
@@ -162,13 +163,13 @@ vector<string> LinuxParser::CpuUtilization() {
   return cpu_utilization;
  }
 
- vector<string> LinuxParser::CpuUtilization(int pid) { 
-  std::vector<std::string> process_utilization;
+ vector<string> LinuxParser::CpuUtilization(int pid) {   
+  std::vector<std::string> process_utilization = {"0", "0", "0", "0"}; //Me aseguro de que devuelvo valores convertibles.
   string line, utime, stime, cutime, cstime;
   std::ifstream filestream(kProcDirectory + std::to_string(pid) + kStatFilename);
   if (filestream.is_open()) {
     std::getline(filestream, line);
-    std::istringstream linestream(line);
+    std::istringstream linestream(line);    
     for (int i = 1; i <= 14; i++){
       linestream >> utime;
     }
@@ -177,6 +178,7 @@ vector<string> LinuxParser::CpuUtilization() {
   }
   return process_utilization;
  }
+
 
 int LinuxParser::TotalProcesses() { 
   string line;
@@ -270,41 +272,34 @@ string LinuxParser::Uid(int pid) {
   return uid; 
 }
 
-// To review. Perhaps is easier if i change ":" by " " and then use operator >>... Check OperatingSystem() (the first one)
+
 string LinuxParser::User(int pid) { 
   string uid = Uid(pid);
-  //string uid = "0";
   string line;
-  string user_string;
-  char * userchar;
-  string temp2, temp1;
+  string user;
+  string access_id;
+  string value;
   std::ifstream filestream(kPasswordPath);
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
+      std::replace(line.begin(), line.end(), ':', ' ');
+      std::replace(line.begin(), line.end(), '/', ' ');
       std::istringstream linestream(line);
-      while (linestream >> user_string) {
-        /* With strtok a "single unit of char" up to ":" is captured every time.
-        Because the file has form "User:AccesID:Uid:..." it is necessary to keep two temporary variables.*/
-        userchar = strtok(&user_string[0], ":");
-        while (userchar != NULL) {
-          temp2 = temp1;
-          temp1 = userchar;
-          userchar = strtok(NULL, ":");
-          if(userchar == uid) {
-            return temp2;
-            break;
-          }
+      while (linestream >> user >> access_id >> value) {
+        if (value == uid) {
+          return user;
         }
-      }      
+      }
     }
-  } 
-  return temp2; 
+  }
+  return value;
 }
 
 
 // It could be interesting to check if linux kernel is under 2.6 in order to deal with Jiffies.
 long LinuxParser::UpTime(int pid) { 
-  string process_uptime;
+  long uptime = 0;
+  string process_uptime = "0";
   string line;
   std::ifstream stream(kProcDirectory + std::to_string(pid) + kStatFilename);
   if (stream.is_open()) {
@@ -315,6 +310,18 @@ long LinuxParser::UpTime(int pid) {
     }
   }
 
-  return std::stol(process_uptime)/sysconf(_SC_CLK_TCK);
+  //std::cout << "UPTIME: " << process_uptime << "\n";
+  try{
+        uptime = std::stol(process_uptime)/sysconf(_SC_CLK_TCK);
+    }
+       
+    // catch invalid_argument exception.
+    catch(const std::invalid_argument &){
+        //cerr << "Invalid argument" << "\n";
+        uptime = 0;
+    }
+  uptime = std::stol(process_uptime)/sysconf(_SC_CLK_TCK);
+
+  return uptime;
 
 }

@@ -12,11 +12,14 @@ class Process {
   Process(int pid);
   int Pid();                             
   std::string User();                     
-  std::string Command();                   
+  std::string Command();
+  float CpuUtilizationCalc();                   
   float CpuUtilization();                  
   std::string Ram();                      
   long int UpTime();                       
-  bool operator<(Process const& a) const;  // TODO: See src/process.cpp
+  bool operator<(Process const& a) const; 
+  bool operator==(const Process& a) const ;
+//   bool operator!=(const Process& a) const ;  
 
   void setActiveJiffiesPrev(long active_jiffies_prev);
   long getActiveJiffiesPrev();
@@ -25,10 +28,9 @@ class Process {
  private:
     int pid_;
     std::string user_;
-    long total_time_prev_{0};  //ELIMINAR
     long active_jiffies_prev_{0};     
     long seconds_prev_{0};       
-    float cpu_utilization_{0.0};
+    float cpu_utilization_{0};
     std::vector<long> active_jiffies_acc_;
 };
 

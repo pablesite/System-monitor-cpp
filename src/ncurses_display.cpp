@@ -71,18 +71,26 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
   mvwprintw(window, row, time_column, "TIME+");
   mvwprintw(window, row, command_column, "COMMAND");
   wattroff(window, COLOR_PAIR(2));
+  
   for (int i = 0; i < n; ++i) {
     // Clear the line
     mvwprintw(window, ++row, pid_column, (string(window->_maxx-2, ' ').c_str()));
+    //std::cout << "PASO " << processes.size() << "\n";
     mvwprintw(window, row, pid_column, to_string(processes[i].Pid()).c_str());
+    //std::cout << "PASO2 " << "\n";
     mvwprintw(window, row, user_column, processes[i].User().c_str());
-    float cpu = processes[i].CpuUtilization() * 100; 
+    
+    
+    float cpu = processes[i].CpuUtilizationCalc() * 100; 
+    // if(processes[i].Pid() == 3679){
+    //   std::cout << "(CPU : " << cpu << ") - \n ";
+    // }
     mvwprintw(window, row, cpu_column, to_string(cpu).substr(0, 4).c_str());
     mvwprintw(window, row, ram_column, processes[i].Ram().c_str());
     mvwprintw(window, row, time_column,
-              Format::ElapsedTime(processes[i].UpTime()).c_str());
+               Format::ElapsedTime(processes[i].UpTime()).c_str());
     mvwprintw(window, row, command_column,
-              processes[i].Command().substr(0, window->_maxx - 46).c_str());
+               processes[i].Command().substr(0, window->_maxx - 46).c_str());
   }
 }
 
@@ -104,8 +112,7 @@ void NCursesDisplay::Display(System& system, int n) {
     box(process_window, 0, 0);
     DisplaySystem(system, system_window);
     DisplayProcesses(system.Processes(), process_window, n);
-    //std::cout << "Número de procesos: " << system.Processes().size() << " \n";
-    //system.SortProcesses(); //Sort processes before windows refresh.
+
     wrefresh(system_window);
     wrefresh(process_window);
     refresh();
