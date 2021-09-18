@@ -17,7 +17,7 @@ using std::vector;
 string LinuxParser::OperatingSystem() {
   string line;
   string key;
-  string value;
+  string value{""};
   std::ifstream filestream(kOSPath);
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
@@ -38,7 +38,7 @@ string LinuxParser::OperatingSystem() {
 
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::Kernel() {
-  string os, kernel, version;
+  string os, kernel{""}, version;
   string line;
   std::ifstream stream(kProcDirectory + kVersionFilename);
   if (stream.is_open()) {
@@ -74,7 +74,7 @@ float LinuxParser::MemoryUtilization() {
   // MemTotal - MemFree
   string line;
   string key;
-  string value;
+  string value{"0"};
   float mem_total{0};
   float mem_free{0};
   std::ifstream filestream(kProcDirectory + kMeminfoFilename);
@@ -99,8 +99,8 @@ float LinuxParser::MemoryUtilization() {
 The second value is the sum of how much time each core has spent idle, in seconds. 
 Consequently, the second value may be greater than the overall system uptime on systems with multiple cores.*/
 long LinuxParser::UpTime() { 
-  string system_uptime = "0";
-  string idle_uptime = "0";
+  string system_uptime{"0"};
+  string idle_uptime{"0"};
   string line;
   std::ifstream stream(kProcDirectory + kUptimeFilename);
   if (stream.is_open()) {
@@ -146,7 +146,7 @@ long LinuxParser::IdleJiffies() {
 
 
 vector<string> LinuxParser::CpuUtilization() { 
-  std::vector<std::string> cpu_utilization;
+  std::vector<std::string> cpu_utilization{10, "0"};;
   string line, key, kUser, kNice, kSystem, kIdle, kIOwait, kIRQ, kSoftIRQ, kSteal, kGuest, kGuestNice ;
   std::ifstream filestream(kProcDirectory + kStatFilename);
   if (filestream.is_open()) {
@@ -164,7 +164,7 @@ vector<string> LinuxParser::CpuUtilization() {
  }
 
  vector<string> LinuxParser::CpuUtilization(int pid) {   
-  std::vector<std::string> process_utilization = {"0", "0", "0", "0"}; //Me aseguro de que devuelvo valores convertibles.
+  std::vector<std::string> process_utilization{4, "0"}; //Me aseguro de que devuelvo valores convertibles.
   string line, utime, stime, cutime, cstime;
   std::ifstream filestream(kProcDirectory + std::to_string(pid) + kStatFilename);
   if (filestream.is_open()) {
@@ -183,7 +183,7 @@ vector<string> LinuxParser::CpuUtilization() {
 int LinuxParser::TotalProcesses() { 
   string line;
   string key;
-  string value;
+  string value{"0"};
   int processes{0};
   std::ifstream filestream(kProcDirectory + kStatFilename);
   if (filestream.is_open()) {
@@ -202,7 +202,7 @@ int LinuxParser::TotalProcesses() {
 int LinuxParser::RunningProcesses() { 
   string line;
   string key;
-  string value;
+  string value{"0"};
   int procs_running{0};
   std::ifstream filestream(kProcDirectory + kStatFilename);
   if (filestream.is_open()) {
@@ -221,7 +221,7 @@ int LinuxParser::RunningProcesses() {
 
 string LinuxParser::Command(int pid) { 
   string line;
-  string command;
+  string command{""};
   std::ifstream filestream(kProcDirectory + std::to_string(pid) + kCmdlineFilename);
   if (filestream.is_open()) {
     std::getline(filestream, line);
@@ -235,7 +235,7 @@ string LinuxParser::Command(int pid) {
 string LinuxParser::Ram(int pid) { 
   string line;
   string key;
-  string vmsize;
+  string vmsize{""};
   std::ifstream filestream(kProcDirectory +  std::to_string(pid) + kStatusFilename);
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
@@ -256,8 +256,8 @@ string LinuxParser::Ram(int pid) {
 string LinuxParser::Uid(int pid) { 
   string line;
   string key;
-  string uid;
-  std::ifstream filestream(kProcDirectory +  std::to_string(pid) + kStatusFilename);
+  string uid{""};
+  std::ifstream filestream(kProcDirectory + std::to_string(pid) + kStatusFilename);
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
@@ -276,7 +276,7 @@ string LinuxParser::Uid(int pid) {
 string LinuxParser::User(int pid) { 
   string uid = Uid(pid);
   string line;
-  string user;
+  string user{""};
   string access_id;
   string value;
   std::ifstream filestream(kPasswordPath);
@@ -292,14 +292,14 @@ string LinuxParser::User(int pid) {
       }
     }
   }
-  return value;
+  return user;
 }
 
 
-// It could be interesting to check if linux kernel is under 2.6 in order to deal with Jiffies.
+// It could be interesting to check if linux kernel is under 2.6.
 long LinuxParser::UpTime(int pid) { 
   long uptime = 0;
-  string process_uptime = "0";
+  string process_uptime{"0"};
   string line;
   std::ifstream stream(kProcDirectory + std::to_string(pid) + kStatFilename);
   if (stream.is_open()) {
@@ -310,18 +310,13 @@ long LinuxParser::UpTime(int pid) {
     }
   }
 
-  //std::cout << "UPTIME: " << process_uptime << "\n";
-  try{
-        uptime = std::stol(process_uptime)/sysconf(_SC_CLK_TCK);
-    }
-       
-    // catch invalid_argument exception.
-    catch(const std::invalid_argument &){
-        //cerr << "Invalid argument" << "\n";
-        uptime = 0;
-    }
-  uptime = std::stol(process_uptime)/sysconf(_SC_CLK_TCK);
+  
+  // try{
+  //   uptime = std::stol(process_uptime)/sysconf(_SC_CLK_TCK);
+  // } catch(const std::invalid_argument &){
+  //   //cerr << "Invalid argument" << "\n";
+  //   uptime = 0;
+  // }
 
   return uptime;
-
 }

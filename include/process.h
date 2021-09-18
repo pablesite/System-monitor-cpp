@@ -13,16 +13,13 @@ class Process {
   int Pid();                             
   std::string User();                     
   std::string Command();
-  float CpuUtilizationCalc();                   
+  void CpuUtilizationCalc();                   
   float CpuUtilization();                  
   std::string Ram();                      
   long int UpTime();                       
   bool operator<(Process const& a) const; 
-  bool operator==(const Process& a) const ;
-//   bool operator!=(const Process& a) const ;  
+  bool operator==(Process const& a) const ;
 
-  void setActiveJiffiesPrev(long active_jiffies_prev);
-  long getActiveJiffiesPrev();
 
   // TODO: Declare any necessary private members
  private:
@@ -31,7 +28,9 @@ class Process {
     long active_jiffies_prev_{0};     
     long seconds_prev_{0};       
     float cpu_utilization_{0};
-    std::vector<long> active_jiffies_acc_;
+    std::vector<long> active_jiffies_acc_{10,0};
+    std::vector<long> seconds_acc_{10,0};
+    
 };
 
 #endif

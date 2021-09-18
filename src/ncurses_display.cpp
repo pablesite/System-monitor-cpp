@@ -8,7 +8,6 @@
 #include "ncurses_display.h"
 #include "system.h"
 
-#include <iostream>
 
 using std::string;
 using std::to_string;
@@ -75,16 +74,9 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
   for (int i = 0; i < n; ++i) {
     // Clear the line
     mvwprintw(window, ++row, pid_column, (string(window->_maxx-2, ' ').c_str()));
-    //std::cout << "PASO " << processes.size() << "\n";
     mvwprintw(window, row, pid_column, to_string(processes[i].Pid()).c_str());
-    //std::cout << "PASO2 " << "\n";
     mvwprintw(window, row, user_column, processes[i].User().c_str());
-    
-    
-    float cpu = processes[i].CpuUtilizationCalc() * 100; 
-    // if(processes[i].Pid() == 3679){
-    //   std::cout << "(CPU : " << cpu << ") - \n ";
-    // }
+    float cpu = processes[i].CpuUtilization() * 100; 
     mvwprintw(window, row, cpu_column, to_string(cpu).substr(0, 4).c_str());
     mvwprintw(window, row, ram_column, processes[i].Ram().c_str());
     mvwprintw(window, row, time_column,

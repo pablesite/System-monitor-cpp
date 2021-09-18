@@ -10,7 +10,6 @@
 class System {
  public:
   System();
-  System(std::vector<Process > &processes);
   Processor& Cpu();                   // TODO: See src/system.cpp
   void SortProcesses();
   std::vector<Process> &Processes();  
