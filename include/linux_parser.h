@@ -6,7 +6,8 @@
 #include <string>
 
 namespace LinuxParser {
-// Paths
+
+/***** PATHS *****/
 const std::string kProcDirectory{"/proc/"};
 const std::string kCmdlineFilename{"/cmdline"};
 const std::string kCpuinfoFilename{"/cpuinfo"};
@@ -18,16 +19,18 @@ const std::string kVersionFilename{"/version"};
 const std::string kOSPath{"/etc/os-release"};
 const std::string kPasswordPath{"/etc/passwd"};
 
-// System
-float MemoryUtilization();
-long UpTime();
-std::vector<int> Pids();
-int TotalProcesses();
-int RunningProcesses();
+
+/***** SYSTEM *****/
 std::string OperatingSystem();
 std::string Kernel();
+float MemoryUtilization();
+long UpTime();
+int TotalProcesses();
+int RunningProcesses();
+std::vector<int> Pids();
 
-// CPU
+
+/***** CPU *****/
 enum CPUStates {
   kUser_ = 0,
   kNice_,
@@ -41,6 +44,13 @@ enum CPUStates {
   kGuestNice_
 };
 
+std::vector<std::string> CpuUtilization();
+long ActiveJiffies();
+long IdleJiffies();
+long Jiffies();
+
+
+/***** PROCESSES *****/
 enum ProcessStates {
   utime_ = 0,
   stime_,
@@ -48,19 +58,13 @@ enum ProcessStates {
   cstime_,
 };
 
-std::vector<std::string> CpuUtilization();
-std::vector<std::string> CpuUtilization(int pid);
-long Jiffies();
-long ActiveJiffies();
-long ActiveJiffies(int pid);
-long IdleJiffies();
-
-// Processes
-std::string Command(int pid);
-std::string Ram(int pid);
 std::string Uid(int pid);
 std::string User(int pid);
+std::vector<std::string> CpuUtilization(int pid);
+long ActiveJiffies(int pid);
+std::string Ram(int pid);
 long int UpTime(int pid);
+std::string Command(int pid);
 };  // namespace LinuxParser
 
 #endif

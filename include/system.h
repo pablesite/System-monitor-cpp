@@ -10,22 +10,26 @@
 class System {
  public:
   System();
-  Processor& Cpu();                   // TODO: See src/system.cpp
-  void SortProcesses();
-  std::vector<Process> &Processes();  
-  float MemoryUtilization();          
-  long UpTime();                      
-  int TotalProcesses();               
-  int RunningProcesses();             
-  std::string Kernel();               
-  std::string OperatingSystem();      
 
-  // TODO: Define any necessary private members
+  std::string Kernel() const;               
+  std::string OperatingSystem() const; 
+
+  float MemoryUtilization() const;          
+  long UpTime() const;                      
+  int TotalProcesses() const;               
+  int RunningProcesses() const;   
+
+  Processor& Cpu();                  
+  std::vector<Process>& Processes();      
+
+
  private:
-  Processor cpu_ = {};
-  std::vector<Process > processes_{};
+  //private members to be returned througt members function
   std::string kernel_;
   std::string operating_system_;
+  Processor cpu_{};
+  std::vector<Process> processes_{};
+  
 };
 
 #endif

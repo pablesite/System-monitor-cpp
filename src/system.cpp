@@ -7,14 +7,7 @@
 #include "process.h"
 #include "processor.h"
 #include "system.h"
-
-#include "linux_parser.h" //Included by me
-#include <iostream>
-//TEST
-#include <curses.h>
-#include <chrono>
-#include <string>
-#include <thread>
+#include "linux_parser.h" 
 
 using std::set;
 using std::size_t;
@@ -27,16 +20,25 @@ System::System(){
     operating_system_ = LinuxParser::OperatingSystem();
 }
 
+// Const functions.
+std::string System::Kernel() const { return kernel_; }
 
+std::string System::OperatingSystem() const { return operating_system_; }
+
+// Parser functions.
+float System::MemoryUtilization() const { return LinuxParser::MemoryUtilization(); }
+
+int System::RunningProcesses() const { return LinuxParser::RunningProcesses(); }
+
+int System::TotalProcesses() const { return LinuxParser::TotalProcesses();}
+
+long int System::UpTime() const { return LinuxParser::UpTime(); }
+
+// Componentes. (otras clases)
 // TODO: Return the system's CPU
-Processor& System::Cpu() { return cpu_; }
+Processor& System::Cpu()  { return cpu_; }
 
-void System::SortProcesses() {
-    std::sort(processes_.begin(), processes_.end());
-}
-
-
-vector<Process> &System::Processes() { 
+vector<Process>& System::Processes() { 
     
     vector<int> pids{};
     // Nuevos procesos o actualizo los que existen
@@ -48,12 +50,12 @@ vector<Process> &System::Processes() {
         if (it != processes_.end()) {
             //Proceso ya existe
             Process *pointer_process = processes_.data();
-            pointer_process[it - processes_.begin()].CpuUtilizationCalc();
+            pointer_process[it - processes_.begin()].CalcCpuUtilization(10);
             
         } else {
             //Nuevo proceso
             Process new_process{pid};
-            new_process.CpuUtilizationCalc();
+            new_process.CalcCpuUtilization(1); //time_acc debería ser para toda la clase...?
             processes_.emplace_back(new_process);
         }
     }
@@ -71,20 +73,3 @@ vector<Process> &System::Processes() {
     
     return processes_; 
 }
-
-std::string System::Kernel() { return kernel_; }
-
-
-float System::MemoryUtilization() { return LinuxParser::MemoryUtilization(); }
-
-
-std::string System::OperatingSystem() { return operating_system_; }
-
-
-int System::RunningProcesses() { return LinuxParser::RunningProcesses(); }
-
-
-int System::TotalProcesses() { return LinuxParser::TotalProcesses();}
-
-
-long int System::UpTime() { return LinuxParser::UpTime(); }

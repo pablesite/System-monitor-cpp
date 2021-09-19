@@ -4,11 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "process.h"
-
 #include "linux_parser.h"
-#include "system.h"
-#include <iostream>
+#include "process.h"
 
 using std::string;
 using std::to_string;
@@ -17,12 +14,35 @@ using std::vector;
 // pid and user doesn't change during the execution of system monitor.
 // pid dosn't need invariant and can be initialed directly.
 Process::Process(int pid): pid_{pid} {
+    user_ = LinuxParser::User(pid_);
+    command_ = LinuxParser::Command(pid_);
     //CpuUtilizationCalc(this);
+    //Inicializar active jiffies prev para un buen cálculo de la cpu desde el inicio
+    active_jiffies_prev_ = LinuxParser::ActiveJiffies(pid);
+    seconds_prev_ = UpTime();
 }
 
-int Process::Pid() { return pid_;}
+int Process::Pid() const { return pid_;}
 
-void Process::CpuUtilizationCalc() {
+/* User of a process doesn't change while the process is runnig --> It might think that user_ could save as private members in Process class.
+ However, in every iteration of ncurses_display the processes are instanciated in order to have the processes updated.
+ So, the user can be parsed from LinuxParser directly*/
+string Process::User() const { return user_; }
+
+/* The same explanation as Process::User() */
+string Process::Command() const { return command_; }
+
+float Process::CpuUtilization() const { return cpu_utilization_; }
+
+
+// Funciones que se actualizan siempre
+long int Process::UpTime() const { return LinuxParser::UpTime() - LinuxParser::UpTime(pid_); } 
+
+string Process::Ram() const { return LinuxParser::Ram(pid_); }
+
+
+//time_acc: time accumulated in seconds for each processor.
+void Process::CalcCpuUtilization(long unsigned int  time_acc) {
     // hay que devolver el acumulado de 10 segundos independientemente del refresco de la pantalla.
     // active_jiffies_acum = [1 2 3 4 5 6 7 8 9 10] --> [2 3 4 5 6 7 8 9 10 11] --> 
    
@@ -38,15 +58,17 @@ void Process::CpuUtilizationCalc() {
         active_jiffies_d = active_jiffies - active_jiffies_prev_; 
         seconds_d = seconds - seconds_prev_;
 
-        //std::cout << "(" << active_jiffies_prev_ << ")";
+  
         if (seconds_d >= 1) { //Esto será necesario...?
             
             active_jiffies_prev_ = active_jiffies;
             seconds_prev_ = seconds;
 
+        
             // Aumentar precisión de cálculo
             active_jiffies_acc_.emplace_back(0);
             seconds_acc_.emplace_back(0);
+
             // añado active_jiffies_d a todos los int del vector.
             long *pointer_process = active_jiffies_acc_.data();
             for (vector<long>::iterator it = active_jiffies_acc_.begin(); it!=active_jiffies_acc_.end(); ++it) {
@@ -64,60 +86,27 @@ void Process::CpuUtilizationCalc() {
             // saco el último int con el acumulado de 10 veces. --> active_jiffies_d acum
             active_jiffies_final = active_jiffies_acc_.back();
             seconds_final = seconds_acc_.back();
-            //std::cout << "(" << active_jiffies_final << ") ";
-            if(active_jiffies_acc_.size() > 5){
+          
+            
+            if(active_jiffies_acc_.size() > time_acc){
                 active_jiffies_acc_.pop_back();
             }
-            if(seconds_acc_.size() > 5){
+
+            if(seconds_acc_.size() > time_acc){
                 seconds_acc_.pop_back();
             }
             // reverse del vector
             std::reverse(active_jiffies_acc_.begin(), active_jiffies_acc_.end());
             std::reverse(seconds_acc_.begin(), seconds_acc_.end());
-
-            // similar para los seconds --> seconds_d acum      
-            //std::cout << "(" << active_jiffies_d << ") ";
-
-            // if(pid_ == 2531){
-            //     std::cout << "SIZE: " << active_jiffies_final << " ";
-            // }
-            
-            // if(pid_ == 3679){
-            //     std::cout << "(seconds_d: " << seconds_d << ") ";
-            //     std::cout << "(seconds: " << seconds << ") ";
-            //     std::cout << "(seconds_prev_: " << seconds_prev_ << ")\n ";
-            // }
-            // if(pid_ == 3679){
-            //     std::cout << "(active_jiffies_d: " << active_jiffies_d << ") ";
-            //     std::cout << "(active_jiffies: " << active_jiffies << ") ";
-            //     std::cout << "(active_jiffies_prev_: " << active_jiffies_prev_ << ") ";
-            //     std::cout << "(CPU : " << (float)((float)(active_jiffies_d)/seconds_d) << ")\n ";
-            // }
-
                        
             cpu_utilization_= ((float)(active_jiffies_final)/sysconf(_SC_CLK_TCK))/seconds_final;        
          } 
     }
 }
 
-float Process::CpuUtilization() { return cpu_utilization_; }
 
-/* The same explanation as Process::User() */
-string Process::Command() { return LinuxParser::Command(pid_); }
-
-string Process::Ram() { return LinuxParser::Ram(pid_); }
-
-/* User of a process doesn't change while the process is runnig --> It might think that user_ could save as private members in Process class.
- However, in every iteration of ncurses_display the processes are instanciated in order to have the processes updated.
- So, the user can be parsed from LinuxParser directly*/
-string Process::User() { return LinuxParser::User(pid_); }
-
-
-long int Process::UpTime() { return LinuxParser::UpTime() - LinuxParser::UpTime(pid_); } 
-
-
+//Funciones de operator overload para procesos.
 bool Process::operator<(Process const& a) const { return (a.cpu_utilization_ < cpu_utilization_); }
-
 
 bool Process::operator==(Process const& a) const  { return (pid_ == a.pid_); }
 
