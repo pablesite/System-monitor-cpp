@@ -6,7 +6,8 @@
 
 #include "format.h"
 #include "ncurses_display.h"
-#include "system.h"
+#include "linux.h"
+#include "linux_process.h"
 
 using std::string;
 using std::to_string;
@@ -28,7 +29,7 @@ std::string NCursesDisplay::ProgressBar(float percent) {
   return result + " " + display + "/100%";
 }
 
-void NCursesDisplay::DisplaySystem(System &system, WINDOW *window) {
+void NCursesDisplay::DisplaySystem(Linux &system, WINDOW *window) {
   int row{0};
   mvwprintw(window, ++row, 2, ("OS: " + system.OperatingSystem()).c_str());
   mvwprintw(window, ++row, 2, ("Kernel: " + system.Kernel()).c_str());
@@ -52,7 +53,7 @@ void NCursesDisplay::DisplaySystem(System &system, WINDOW *window) {
   wrefresh(window);
 }
 
-void NCursesDisplay::DisplayProcesses(std::vector<Process> &processes,
+void NCursesDisplay::DisplayProcesses(std::vector<LinuxProcess> &processes,
                                       WINDOW *window, int n) {
   int row{0};
   int const pid_column{2};
@@ -86,7 +87,7 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process> &processes,
   }
 }
 
-void NCursesDisplay::Display(System &system, int n) {
+void NCursesDisplay::Display(Linux &system, int n) {
   initscr();     // start ncurses
   noecho();      // do not print input values
   cbreak();      // terminate ncurses on ctrl + c

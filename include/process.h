@@ -2,37 +2,25 @@
 #define PROCESS_H
 
 #include <string>
-#include <vector>
+// #include <vector>
 
 class Process {
 public:
-  Process(int pid);
+  //Process();
+  //virtual ~Process() = default;
+  virtual int Pid() const = 0;
+  virtual std::string User() const = 0;
+  virtual std::string Command() const = 0;
+  virtual float CpuUtilization() const = 0;
 
-  int Pid() const;
-  std::string User() const;
-  std::string Command() const;
-  float CpuUtilization() const;
+  virtual long int UpTime() const = 0;
+  virtual std::string Ram() const = 0;
 
-  long int UpTime() const;
-  std::string Ram() const;
+  virtual void CalcCpuUtilization(long unsigned int time_acc) = 0;
 
-  void CalcCpuUtilization(long unsigned int time_acc);
+//   virtual bool operator<(Process const &a) const = 0;
+//   virtual bool operator==(Process const &a) const = 0;
 
-  bool operator<(Process const &a) const;
-  bool operator==(Process const &a) const;
-
-private:
-  // private members to be returned througt members function
-  int pid_;
-  std::string user_;
-  std::string command_;
-  float cpu_utilization_;
-
-  // private members to be used internally to calculate cpu utilization.
-  long active_jiffies_prev_{0};
-  long seconds_prev_{0};
-  std::vector<long> active_jiffies_acc_{10, 0};
-  std::vector<long> seconds_acc_{10, 0};
 };
 
 #endif

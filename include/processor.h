@@ -3,11 +3,8 @@
 
 class Processor {
 public:
-  float Utilization();
+  virtual float Utilization() = 0;
 
-private:
-  long idle_j_prev_{0};
-  long active_j_prev_{0};
 };
 
 #endif

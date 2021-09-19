@@ -1,10 +1,9 @@
-#include "processor.h"
-#include "linux_parser.h" //Included by me
-#include <iostream>
+#include "linux_processor.h"
+#include "linux_parser.h" 
 
 // CPU Utilization is the diferential of active jiffes divided by diferential of
 // total jiffies.
-float Processor::Utilization() {
+float LinuxProcessor::Utilization() {
   long active_j = LinuxParser::ActiveJiffies();
 
   // Calculation of spreads.

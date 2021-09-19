@@ -9,25 +9,18 @@
 
 class System {
 public:
-  System();
+  virtual std::string Kernel() const = 0;
+  virtual std::string OperatingSystem() const= 0;
 
-  std::string Kernel() const;
-  std::string OperatingSystem() const;
+  virtual float MemoryUtilization() const = 0;
+  virtual long UpTime() const = 0;
+  virtual int TotalProcesses() const = 0;
+  virtual int RunningProcesses() const = 0;
 
-  float MemoryUtilization() const;
-  long UpTime() const;
-  int TotalProcesses() const;
-  int RunningProcesses() const;
+  virtual Processor &Cpu() = 0;
+  //virtual std::vector<Process> &Processes() = 0;
+  //virtual Process &Test() = 0;
 
-  Processor &Cpu();
-  std::vector<Process> &Processes();
-
-private:
-  // private members to be returned througt members function
-  std::string kernel_;
-  std::string operating_system_;
-  Processor cpu_{};
-  std::vector<Process> processes_{};
 };
 
 #endif

@@ -1,7 +1,7 @@
 #include "ncurses_display.h"
-#include "system.h"
+#include "linux.h"
 
 int main() {
-  System system;
+  Linux system;
   NCursesDisplay::Display(system);
 }

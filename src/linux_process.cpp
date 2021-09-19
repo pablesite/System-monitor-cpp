@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <vector>
 
+#include "linux_process.h"
 #include "linux_parser.h"
-#include "process.h"
 
 using std::string;
 using std::to_string;
@@ -13,7 +13,7 @@ using std::vector;
 
 // pid and user doesn't change during the execution of system monitor.
 // pid dosn't need invariant and can be initialed directly.
-Process::Process(int pid) : pid_{pid} {
+LinuxProcess::LinuxProcess(int pid) : pid_{pid} {
   user_ = LinuxParser::User(pid_);
   command_ = LinuxParser::Command(pid_);
   // CpuUtilizationCalc(this);
@@ -23,29 +23,29 @@ Process::Process(int pid) : pid_{pid} {
   seconds_prev_ = UpTime();
 }
 
-int Process::Pid() const { return pid_; }
+int LinuxProcess::Pid() const { return pid_; }
 
 /* User of a process doesn't change while the process is runnig --> It might
  think that user_ could save as private members in Process class. However, in
  every iteration of ncurses_display the processes are instanciated in order to
  have the processes updated. So, the user can be parsed from LinuxParser
  directly*/
-string Process::User() const { return user_; }
+string LinuxProcess::User() const { return user_; }
 
 /* The same explanation as Process::User() */
-string Process::Command() const { return command_; }
+string LinuxProcess::Command() const { return command_; }
 
-float Process::CpuUtilization() const { return cpu_utilization_; }
+float LinuxProcess::CpuUtilization() const { return cpu_utilization_; }
 
 // Funciones que se actualizan siempre
-long int Process::UpTime() const {
+long int LinuxProcess::UpTime() const {
   return LinuxParser::UpTime() - LinuxParser::UpTime(pid_);
 }
 
-string Process::Ram() const { return LinuxParser::Ram(pid_); }
+string LinuxProcess::Ram() const { return LinuxParser::Ram(pid_); }
 
 // time_acc: time accumulated in seconds for each processor.
-void Process::CalcCpuUtilization(long unsigned int time_acc) {
+void LinuxProcess::CalcCpuUtilization(long unsigned int time_acc) {
   // hay que devolver el acumulado de 10 segundos independientemente del
   // refresco de la pantalla. active_jiffies_acum = [1 2 3 4 5 6 7 8 9 10] -->
   // [2 3 4 5 6 7 8 9 10 11] -->
@@ -110,8 +110,8 @@ void Process::CalcCpuUtilization(long unsigned int time_acc) {
 }
 
 // Funciones de operator overload para procesos.
-bool Process::operator<(Process const &a) const {
+bool LinuxProcess::operator<(LinuxProcess const &a) const {
   return (a.cpu_utilization_ < cpu_utilization_);
 }
 
-bool Process::operator==(Process const &a) const { return (pid_ == a.pid_); }
+bool LinuxProcess::operator==(LinuxProcess const &a) const { return (pid_ == a.pid_); }
