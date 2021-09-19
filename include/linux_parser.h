@@ -19,7 +19,6 @@ const std::string kVersionFilename{"/version"};
 const std::string kOSPath{"/etc/os-release"};
 const std::string kPasswordPath{"/etc/passwd"};
 
-
 /***** SYSTEM *****/
 std::string OperatingSystem();
 std::string Kernel();
@@ -28,7 +27,6 @@ long UpTime();
 int TotalProcesses();
 int RunningProcesses();
 std::vector<int> Pids();
-
 
 /***** CPU *****/
 enum CPUStates {
@@ -49,7 +47,6 @@ long ActiveJiffies();
 long IdleJiffies();
 long Jiffies();
 
-
 /***** PROCESSES *****/
 enum ProcessStates {
   utime_ = 0,
@@ -65,6 +62,6 @@ long ActiveJiffies(int pid);
 std::string Ram(int pid);
 long int UpTime(int pid);
 std::string Command(int pid);
-};  // namespace LinuxParser
+}; // namespace LinuxParser
 
 #endif
