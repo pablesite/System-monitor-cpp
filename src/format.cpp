@@ -14,7 +14,6 @@ string Format::OutputFormat(int unit_time) {
 
 // INPUT: Long int measuring seconds
 // OUTPUT: HH:MM:SS
-
 string Format::ElapsedTime(long secs) {
   int hours = (int)secs / 3600;
   int minutes = (int)(secs / 60) % 60;

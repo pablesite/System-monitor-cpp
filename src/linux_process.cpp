@@ -4,114 +4,109 @@
 #include <unistd.h>
 #include <vector>
 
-#include "linux_process.h"
 #include "linux_parser.h"
+#include "linux_process.h"
 
 using std::string;
 using std::to_string;
 using std::vector;
 
-// pid and user doesn't change during the execution of system monitor.
-// pid dosn't need invariant and can be initialed directly.
 LinuxProcess::LinuxProcess(int pid) : pid_{pid} {
+  // PID and USER doesn't change during the execution of system monitor. So it
+  // can be initialized in constructor.
   user_ = LinuxParser::User(pid_);
   command_ = LinuxParser::Command(pid_);
-  // CpuUtilizationCalc(this);
-  // Inicializar active jiffies prev para un buen cálculo de la cpu desde el
-  // inicio
-  active_jiffies_prev_ = LinuxParser::ActiveJiffies(pid);
-  seconds_prev_ = UpTime();
+  // Active Jiffies Prev and Seconds Prev should be established in the
+  // construct in order to not obtain long term data in the first few seconds.
+  aj_prev_ = LinuxParser::ActiveJiffies(pid);
+  secs_prev_ = UpTime();
 }
 
 int LinuxProcess::Pid() const { return pid_; }
 
-/* User of a process doesn't change while the process is runnig --> It might
- think that user_ could save as private members in Process class. However, in
- every iteration of ncurses_display the processes are instanciated in order to
- have the processes updated. So, the user can be parsed from LinuxParser
- directly*/
 string LinuxProcess::User() const { return user_; }
 
-/* The same explanation as Process::User() */
 string LinuxProcess::Command() const { return command_; }
 
 float LinuxProcess::CpuUtilization() const { return cpu_utilization_; }
 
-// Funciones que se actualizan siempre
 long int LinuxProcess::UpTime() const {
   return LinuxParser::UpTime() - LinuxParser::UpTime(pid_);
 }
 
 string LinuxProcess::Ram() const { return LinuxParser::Ram(pid_); }
 
-// time_acc: time accumulated in seconds for each processor.
+/* Calculation of Cpu Utilization for each process is based on an accumulated of
+ "time_acc" seconds. In each iteration the cpu utilization in last
+ second is calculated. The accumulated is stored in a vector of "time_acc"
+ positions adding this differential utilization each time.*/
 void LinuxProcess::CalcCpuUtilization(long unsigned int time_acc) {
-  // hay que devolver el acumulado de 10 segundos independientemente del
-  // refresco de la pantalla. active_jiffies_acum = [1 2 3 4 5 6 7 8 9 10] -->
-  // [2 3 4 5 6 7 8 9 10 11] -->
+  // actual variables
+  long aj_act = LinuxParser::ActiveJiffies(pid_);
+  long secs_act = UpTime();
+  // differential variables
+  long aj_d{0};
+  long secs_d{0};
+  // final variables
+  long aj{0};
+  long secs{0};
 
-  long active_jiffies = LinuxParser::ActiveJiffies(pid_);
-  long seconds = UpTime();
-  long active_jiffies_d{0};
-  long seconds_d{0};
-  long active_jiffies_final{0};
-  long seconds_final{0};
+  // Check if process has started.
+  if (secs_act >= 0) {
+    aj_d = aj_act - aj_prev_;
+    secs_d = secs_act - secs_prev_;
 
-  if (seconds >= 0) {
-    active_jiffies_d = active_jiffies - active_jiffies_prev_;
-    seconds_d = seconds - seconds_prev_;
+    // Check if process is active in last iteration.
+    if (secs_d >= 1) {
+      aj_prev_ = aj_act;
+      secs_prev_ = secs_act;
 
-    if (seconds_d >= 1) { // Esto será necesario...?
-
-      active_jiffies_prev_ = active_jiffies;
-      seconds_prev_ = seconds;
-
-      // Aumentar precisión de cálculo
-      active_jiffies_acc_.emplace_back(0);
-      seconds_acc_.emplace_back(0);
-
-      // añado active_jiffies_d a todos los int del vector.
-      long *pointer_process = active_jiffies_acc_.data();
-      for (vector<long>::iterator it = active_jiffies_acc_.begin();
-           it != active_jiffies_acc_.end(); ++it) {
-
-        pointer_process[it - active_jiffies_acc_.begin()] += active_jiffies_d;
+      /***** To improve calculation precission *****/
+      // Introduce a new item in vectors to store the accumulated data.
+      aj_acc_.emplace_back(0);
+      secs_acc_.emplace_back(0);
+      // Adding Active Jiffies Differential and Seconds Differential to all the
+      // items of the vectors Active Jiffies Accumulated and Seconds Acumulated
+      long *pointer_process = aj_acc_.data();
+      for (vector<long>::iterator it = aj_acc_.begin(); it != aj_acc_.end();
+           ++it) {
+        pointer_process[it - aj_acc_.begin()] += aj_d;
       }
-      long *pointer_seconds = seconds_acc_.data();
-      for (vector<long>::iterator it = seconds_acc_.begin();
-           it != seconds_acc_.end(); ++it) {
-        pointer_seconds[it - seconds_acc_.begin()] += seconds_d;
+      long *pointer_seconds = secs_acc_.data();
+      for (vector<long>::iterator it = secs_acc_.begin(); it != secs_acc_.end();
+           ++it) {
+        pointer_seconds[it - secs_acc_.begin()] += secs_d;
       }
-
-      // reverse del vector
-      std::reverse(active_jiffies_acc_.begin(), active_jiffies_acc_.end());
-      std::reverse(seconds_acc_.begin(), seconds_acc_.end());
-      // saco el último int con el acumulado de 10 veces. --> active_jiffies_d
-      // acum
-      active_jiffies_final = active_jiffies_acc_.back();
-      seconds_final = seconds_acc_.back();
-
-      if (active_jiffies_acc_.size() > time_acc) {
-        active_jiffies_acc_.pop_back();
+      // Reverse of the vectors in order to have the maximum data accumulated in
+      // the last element of the vectors
+      std::reverse(aj_acc_.begin(), aj_acc_.end());
+      std::reverse(secs_acc_.begin(), secs_acc_.end());
+      // Obtain accumulated values.
+      aj = aj_acc_.back();
+      secs = secs_acc_.back();
+      // Delete this accumulated values if size of vectors has reached its
+      // limit.
+      if (aj_acc_.size() > time_acc) {
+        aj_acc_.pop_back();
       }
-
-      if (seconds_acc_.size() > time_acc) {
-        seconds_acc_.pop_back();
+      if (secs_acc_.size() > time_acc) {
+        secs_acc_.pop_back();
       }
-      // reverse del vector
-      std::reverse(active_jiffies_acc_.begin(), active_jiffies_acc_.end());
-      std::reverse(seconds_acc_.begin(), seconds_acc_.end());
+      // Reverse of the vectors to have the minimum accumulated in last vector
+      // to the next iteration.
+      std::reverse(aj_acc_.begin(), aj_acc_.end());
+      std::reverse(secs_acc_.begin(), secs_acc_.end());
+      /***** End of improving the cpu utilization precission *****/
 
-      cpu_utilization_ =
-          ((float)(active_jiffies_final) / sysconf(_SC_CLK_TCK)) /
-          seconds_final;
+      cpu_utilization_ = ((float)(aj) / sysconf(_SC_CLK_TCK)) / secs;
     }
   }
 }
 
-// Funciones de operator overload para procesos.
 bool LinuxProcess::operator<(LinuxProcess const &a) const {
   return (a.cpu_utilization_ < cpu_utilization_);
 }
 
-bool LinuxProcess::operator==(LinuxProcess const &a) const { return (pid_ == a.pid_); }
+bool LinuxProcess::operator==(LinuxProcess const &a) const {
+  return (a.pid_ == pid_);
+}

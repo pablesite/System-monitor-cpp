@@ -35,10 +35,10 @@ private:
   float cpu_utilization_;
 
   /*****To be used to calculate cpu utilization of each process*****/
-  long active_jiffies_prev_{0};
-  long seconds_prev_{0};
-  std::vector<long> active_jiffies_acc_{10, 0};
-  std::vector<long> seconds_acc_{10, 0};
+  long aj_prev_{0};
+  long secs_prev_{0};
+  std::vector<long> aj_acc_{10, 0};
+  std::vector<long> secs_acc_{10, 0};
 };
 
 #endif

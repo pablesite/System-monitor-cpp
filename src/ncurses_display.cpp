@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "format.h"
-#include "ncurses_display.h"
 #include "linux.h"
 #include "linux_process.h"
+#include "ncurses_display.h"
 
 using std::string;
 using std::to_string;

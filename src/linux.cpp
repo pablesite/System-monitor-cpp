@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "linux.h"
-#include "linux_processor.h"
-#include "linux_process.h"
 #include "linux_parser.h"
+#include "linux_process.h"
+#include "linux_processor.h"
 
 using std::set;
 using std::size_t;
@@ -15,17 +15,16 @@ using std::string;
 using std::vector;
 
 Linux::Linux() {
-  // Characteristic that doesn't change during program execution.
+  // Kernel and Operating System doesn't change during the execution of system
+  // monitor. So it can be initialized in constructor.
   kernel_ = LinuxParser::Kernel();
   operating_system_ = LinuxParser::OperatingSystem();
 }
 
-// Const functions.
 std::string Linux::Kernel() const { return kernel_; }
 
 std::string Linux::OperatingSystem() const { return operating_system_; }
 
-// Parser functions.
 float Linux::MemoryUtilization() const {
   return LinuxParser::MemoryUtilization();
 }
@@ -36,50 +35,48 @@ int Linux::TotalProcesses() const { return LinuxParser::TotalProcesses(); }
 
 long int Linux::UpTime() const { return LinuxParser::UpTime(); }
 
-// Componentes. (otras clases)
 LinuxProcessor &Linux::Cpu() { return cpu_; }
 
+/*To return a vector of LinuxProcesses:
+1. If process existe: Update calculation of Cpu Utilitization.
+2. If process dosn't exist: Add new process to processes_ (with Cpu
+Utilitization calculated)
+3. Remove dead processes
+4. Sort process by Cpu Utilization*/
 vector<LinuxProcess> &Linux::Processes() {
 
-  vector<int> pids{};
-  // Nuevos procesos o actualizo los que existen
-  for (int pid : LinuxParser::Pids()) {
-    pids.emplace_back(pid);
+  vector<int> pids = LinuxParser::Pids();
 
+  for (int pid : pids) {
     const LinuxProcess &search_process{pid};
-    auto it = std::find(processes_.begin(), processes_.end(), search_process);
+    auto it = std::find(
+        processes_.begin(), processes_.end(),
+        search_process); //(Using == operator overloaded in class LinuxProcess)
     if (it != processes_.end()) {
-      // Proceso ya existe
+      // 1. Process exist
       LinuxProcess *pointer_process = processes_.data();
+      // Accumulated for 10 seconds
       pointer_process[it - processes_.begin()].CalcCpuUtilization(10);
-
     } else {
-      // Nuevo proceso
+      // 2. Process dosn't exist
       LinuxProcess new_process{pid};
-      new_process.CalcCpuUtilization(
-          1); // time_acc debería ser para toda la clase...?
+      // First time, it is enough with 1 second accumulated.
+      new_process.CalcCpuUtilization(1);
       processes_.emplace_back(new_process);
     }
   }
 
-  // Elimino procesos obsoletos
+  // 3. Remove dead process
   for (long unsigned int i = 0; i < processes_.size(); i++) {
     if (std::find(pids.begin(), pids.end(), processes_[i].Pid()) ==
         pids.end()) {
-      // Si el proceso no se corresponde con ningún pid lo elimino.
       processes_.erase(processes_.begin() + i);
     }
   }
 
-  // order process by CPU utilization.
-  std::sort(
-      processes_.begin(),
-      processes_.end()); // This use the < operator implemented un process.cpp
+  // 4. Sort processes by CPU utilization. (Using < operator overloaded in class
+  // LinuxProcess)
+  std::sort(processes_.begin(), processes_.end());
 
   return processes_;
 }
-
-// LinuxProcess &Linux::Test() {
-//   LinuxProcess myprocess{1};
-//   return myprocess;
-// }

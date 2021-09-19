@@ -12,6 +12,7 @@ using std::to_string;
 using std::vector;
 
 /***** SYSTEM *****/
+
 string LinuxParser::OperatingSystem() {
   string line;
   string key;
@@ -46,9 +47,8 @@ string LinuxParser::Kernel() {
   return kernel;
 }
 
-// To review. Is there another way of memory calculation better?
+// % of RAM Memory Used: (MemTotal - MemFree)/MemTotal
 float LinuxParser::MemoryUtilization() {
-  // MemTotal - MemFree
   string line;
   string key;
   string value{"0"};
@@ -71,10 +71,7 @@ float LinuxParser::MemoryUtilization() {
   return (mem_total - mem_free) / mem_total;
 }
 
-/* The first value represents the total number of seconds the system has been
-up. The second value is the sum of how much time each core has spent idle, in
-seconds. Consequently, the second value may be greater than the overall system
-uptime on systems with multiple cores.*/
+// Use Idle Uptime is not considered necessary
 long LinuxParser::UpTime() {
   string system_uptime{"0"};
   string idle_uptime{"0"};
@@ -146,11 +143,11 @@ vector<int> LinuxParser::Pids() {
 }
 
 /***** CPU *****/
-// Se podría optimizar el hecho de que ActiveJiffies y IddleJiffies llaman a la
-// misma función para conseguir diferentes datos.
+
+/*ActiveJiffies() and IddleJiffies() call this function to obtain some of string
+data in cpu_utilization. This could be optimized.*/
 vector<string> LinuxParser::CpuUtilization() {
   std::vector<std::string> cpu_utilization{10, "0"};
-  ;
   string line, key, kUser, kNice, kSystem, kIdle, kIOwait, kIRQ, kSoftIRQ,
       kSteal, kGuest, kGuestNice;
   std::ifstream filestream(kProcDirectory + kStatFilename);
@@ -170,8 +167,8 @@ vector<string> LinuxParser::CpuUtilization() {
   return cpu_utilization;
 }
 
+// ActiveJiffies = user + nice + system + irq + softirq + steal.
 long LinuxParser::ActiveJiffies() {
-  // ActiveJiffies = user + nice + system + irq + softirq + steal.
   std::vector<std::string> cpu_u = LinuxParser::CpuUtilization();
   return std::stol(cpu_u[CPUStates::kUser_]) +
          std::stol(cpu_u[CPUStates::kNice_]) +
@@ -181,8 +178,8 @@ long LinuxParser::ActiveJiffies() {
          std::stol(cpu_u[CPUStates::kSteal_]);
 }
 
+// IdleJiffies = idle + iowait.
 long LinuxParser::IdleJiffies() {
-  // IdleJiffies = idle + iowait.
   std::vector<std::string> cpu_u = LinuxParser::CpuUtilization();
   return std::stol(cpu_u[CPUStates::kIdle_]) +
          std::stol(cpu_u[CPUStates::kIOwait_]);
@@ -191,6 +188,7 @@ long LinuxParser::IdleJiffies() {
 long LinuxParser::Jiffies() { return ActiveJiffies() + IdleJiffies(); }
 
 /***** PROCESSES *****/
+
 string LinuxParser::Uid(int pid) {
   string line;
   string key;
@@ -234,8 +232,7 @@ string LinuxParser::User(int pid) {
 }
 
 vector<string> LinuxParser::CpuUtilization(int pid) {
-  std::vector<std::string> process_utilization{
-      4, "0"}; // Me aseguro de que devuelvo valores convertibles.
+  std::vector<std::string> process_utilization{4, "0"};
   string line, utime, stime, cutime, cstime;
   std::ifstream filestream(kProcDirectory + std::to_string(pid) +
                            kStatFilename);
@@ -251,8 +248,8 @@ vector<string> LinuxParser::CpuUtilization(int pid) {
   return process_utilization;
 }
 
+// ActiveJiffies = utime + stime + cstime + cutime.
 long LinuxParser::ActiveJiffies(int pid) {
-  // ActiveJiffies = utime_ + stime_ + cstime_ + cutime_.
   std::vector<std::string> process_u = LinuxParser::CpuUtilization(pid);
   return std::stol(process_u[ProcessStates::utime_]) +
          std::stol(process_u[ProcessStates::stime_]) +
@@ -281,7 +278,7 @@ string LinuxParser::Ram(int pid) {
   return vmsize;
 }
 
-// It could be interesting to check if linux kernel is under 2.6.
+// To improve: It could be interesting to check if linux kernel is under 2.6.
 long LinuxParser::UpTime(int pid) {
   long uptime = 0;
   string process_uptime{"0"};
@@ -294,14 +291,6 @@ long LinuxParser::UpTime(int pid) {
       linestream >> process_uptime;
     }
   }
-
-  // try{
-  //   uptime = std::stol(process_uptime)/sysconf(_SC_CLK_TCK);
-  // } catch(const std::invalid_argument &){
-  //   //cerr << "Invalid argument" << "\n";
-  //   uptime = 0;
-  // }
-
   return uptime;
 }
 

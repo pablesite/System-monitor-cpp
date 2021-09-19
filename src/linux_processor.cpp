@@ -1,5 +1,5 @@
 #include "linux_processor.h"
-#include "linux_parser.h" 
+#include "linux_parser.h"
 
 // CPU Utilization is the diferential of active jiffes divided by diferential of
 // total jiffies.
