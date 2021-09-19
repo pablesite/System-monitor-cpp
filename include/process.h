@@ -2,12 +2,9 @@
 #define PROCESS_H
 
 #include <string>
-// #include <vector>
 
 class Process {
 public:
-  //Process();
-  //virtual ~Process() = default;
   virtual int Pid() const = 0;
   virtual std::string User() const = 0;
   virtual std::string Command() const = 0;
@@ -18,9 +15,12 @@ public:
 
   virtual void CalcCpuUtilization(long unsigned int time_acc) = 0;
 
-//   virtual bool operator<(Process const &a) const = 0;
-//   virtual bool operator==(Process const &a) const = 0;
-
+  /* I don't know how to make these functions virtual functions.
+   They use a Process as input, and it would be necesseray pass a LinuxProcess
+   when it is overriden.
+   This produce an error despite LinuxProcess derive from Process */
+  //   virtual bool operator<(Process const &a) const = 0;
+  //   virtual bool operator==(Process const &a) const = 0;
 };
 
 #endif

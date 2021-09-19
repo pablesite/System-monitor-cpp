@@ -10,7 +10,7 @@
 class System {
 public:
   virtual std::string Kernel() const = 0;
-  virtual std::string OperatingSystem() const= 0;
+  virtual std::string OperatingSystem() const = 0;
 
   virtual float MemoryUtilization() const = 0;
   virtual long UpTime() const = 0;
@@ -18,9 +18,11 @@ public:
   virtual int RunningProcesses() const = 0;
 
   virtual Processor &Cpu() = 0;
-  //virtual std::vector<Process> &Processes() = 0;
-  //virtual Process &Test() = 0;
-
+  /* I don't know how to make this function virtual functions.
+     It use a Process as input, and it would be necesseray pass a LinuxProcess
+     when it is overriden. This produce an error despite LinuxProcess derive
+     from Process */
+  // virtual std::vector<Process> &Processes() = 0;
 };
 
 #endif

@@ -4,7 +4,6 @@
 class Processor {
 public:
   virtual float Utilization() = 0;
-
 };
 
 #endif
